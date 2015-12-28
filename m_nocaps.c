@@ -10,6 +10,8 @@
  * 
  * Changes:
  *
+ * 1.4.1 (DBoyz) [25th December 2015]
+ * ---- Code tidying and fixing silly mistakes.
  * 1.4 (DBoyz) [22nd April 2015]
  * ---- Reindentation, introduce missing braces and remove whitespaces.
  * ---- Switch '&&' to '&' boolean operator as pointed out by Jobe in 04 August 2013.
@@ -56,31 +58,28 @@
 #include "badwords.h"
 #endif
 
-#define NOCAPS_VERSION "v1.3"
-
 /*
  * NOCAPS_ACTION - what action to take?
  * 1 = BLOCK
  * 0 = CONVERT the message to lowercase
- * any other number == DO NOTHING
+ * any other number = DO NOTHING
  */
+
 #define NOCAPS_ACTION 1
 
 Cmode_t NOCAPS_BLOCK = 0L;
 Cmode *ModeBlock = NULL;
+static Hook *CheckMsg;
+DLLFUNC char *nocaps_checkmsg(aClient *, aClient *, aChannel *, char *, int);
 
 ModuleHeader MOD_HEADER(m_nocaps)
 = {
 	"m_nocaps",
-	NOCAPS_VERSION,
-	"chmode +x - Blocks all caps messages sent to channels (Grunt,DBoyz)",
+	"v1.4.1",
+	"chmode +x - Blocks all caps messages sent to channels (Grunt, DBoyz)",
 	"3.2-b8-1",
-	NULL 
+	NULL
 };
-
-static Hook *CheckMsg;
-
-DLLFUNC char *nocaps_checkmsg(aClient *, aClient *, aChannel *, char *, int);
 
 DLLFUNC int MOD_INIT(m_nocaps)(ModuleInfo *modinfo)
 {
@@ -92,8 +91,9 @@ DLLFUNC int MOD_INIT(m_nocaps)(ModuleInfo *modinfo)
 	req.paracount = 0;
 	req.is_ok = extcmode_default_requirehalfop;
 	req.flag = 'x';
-	if (!(ModeBlock = CmodeAdd(modinfo->handle, req, &NOCAPS_BLOCK))) {
-		config_error("delayjoin: Could not add channel mode +x : %s",
+	if (!(ModeBlock = CmodeAdd(modinfo->handle, req, &NOCAPS_BLOCK)))
+	{
+		config_error("nocaps: Could not add channel mode +x : %s",
 		    ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
@@ -117,20 +117,25 @@ DLLFUNC int MOD_UNLOAD(m_nocaps)(int module_unload)
 
 DLLFUNC char *nocaps_checkmsg(aClient *cptr, aClient *sptr, aChannel *chptr, char *text, int notice)
 {
+	int contor;
+	unsigned short int rezultat=0;
 	if (chptr->mode.extmode & NOCAPS_BLOCK)
 	{
-		int contor;
-		unsigned short int rezultat=0;
-		for (contor=0 ; contor<=strlen(text) && (!rezultat) ; contor++) {
+		for (contor=0 ; contor<=strlen(text) && (!rezultat) ; contor++)
+		{
 			if (islower(text[contor]))
 			rezultat=1;
 		}
-		if (rezultat==1) return text;
-		else {
+		if (rezultat==1)
+		{
+			return text;
+		}
+		else
+		{
 			switch(NOCAPS_ACTION)
 			{
 			case 1 :
-				sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, sptr->name, sptr->name,
+				sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, sptr->name, chptr->chname,
 				    "Messages with all letters in caps are not permitted in this channel",
 				    chptr->chname);
 				return NULL;
@@ -138,9 +143,11 @@ DLLFUNC char *nocaps_checkmsg(aClient *cptr, aClient *sptr, aChannel *chptr, cha
 			case 0 :
 				for (contor=0 ; contor<=strlen(text) ; contor++) {
 					if (isupper(text[contor]))
+					{
 						text[contor]=tolower(text[contor]);
+					}
 				}
-				sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, sptr->name, sptr->name,
+				sendto_one(sptr, err_str(ERR_CANNOTSENDTOCHAN), me.name, sptr->name, chptr->chname,
 				    "Your message to this channel was converted to lowercase",
 				    chptr->chname);
 				return text;
@@ -148,5 +155,8 @@ DLLFUNC char *nocaps_checkmsg(aClient *cptr, aClient *sptr, aChannel *chptr, cha
 			}
 		}
 	}
-	else { return text; }
+	else
+	{
+		return text;
+	}
 }
