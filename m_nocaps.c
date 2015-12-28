@@ -10,6 +10,8 @@
  * 
  * Changes:
  *
+ * 1.5 (DBoyz) [26th December 2015]
+ * ---- Update to UnrealIRCd-4.0 codebase.
  * 1.4.1 (DBoyz) [25th December 2015]
  * ---- Code tidying and fixing silly mistakes.
  * 1.4 (DBoyz) [22nd April 2015]
@@ -28,35 +30,7 @@
  * ---- Initial release
  */
 
-// System includes before Unreal includes, thanks Stealth!
-
-#include <fcntl.h>
-#include <time.h>
-#include <sys/stat.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-
-// Unreal includes follow...
-
-#include "config.h"
-#include "struct.h"
-#include "common.h"
-#include "sys.h"
-#include "numeric.h"
-#include "msg.h"
-#include "proto.h"
-#include "channel.h"
-#include "h.h"
-
-#ifdef _WIN32
-#include <io.h>
-#include "version.h"
-#endif
-
-#ifdef STRIPBADWORDS
-#include "badwords.h"
-#endif
+#include "unrealircd.h"
 
 /*
  * NOCAPS_ACTION - what action to take?
@@ -70,20 +44,19 @@
 Cmode_t NOCAPS_BLOCK = 0L;
 Cmode *ModeBlock = NULL;
 static Hook *CheckMsg;
-DLLFUNC char *nocaps_checkmsg(aClient *, aClient *, aChannel *, char *, int);
+char *nocaps_checkmsg(aClient *, aChannel *, char *, int);
 
 ModuleHeader MOD_HEADER(m_nocaps)
 = {
 	"m_nocaps",
-	"v1.4.1",
+	"v1.5",
 	"chmode +x - Blocks all caps messages sent to channels (Grunt, DBoyz)",
 	"3.2-b8-1",
 	NULL
 };
 
-DLLFUNC int MOD_INIT(m_nocaps)(ModuleInfo *modinfo)
+MOD_INIT(m_nocaps)
 {
-	ModuleSetOptions(modinfo->handle, MOD_OPT_PERM);
 	CmodeInfo req;
 	ircd_log(LOG_ERROR, "debug: mod_init called from m_nocaps");
 	sendto_realops("loading m_nocaps");
@@ -97,16 +70,16 @@ DLLFUNC int MOD_INIT(m_nocaps)(ModuleInfo *modinfo)
 		    ModuleGetErrorStr(modinfo->handle));
 		return MOD_FAILED;
 	}
-	CheckMsg = HookAddPCharEx(modinfo->handle, HOOKTYPE_CHANMSG, nocaps_checkmsg);
+	CheckMsg = HookAddPChar(modinfo->handle, HOOKTYPE_PRE_CHANMSG, 0, nocaps_checkmsg);
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_LOAD(m_nocaps)(int module_load)
+MOD_LOAD(m_nocaps)
 {
 	return MOD_SUCCESS;
 }
 
-DLLFUNC int MOD_UNLOAD(m_nocaps)(int module_unload)
+MOD_UNLOAD(m_nocaps)
 {
 	HookDel(CheckMsg);
 	CmodeDel(ModeBlock);
@@ -115,7 +88,7 @@ DLLFUNC int MOD_UNLOAD(m_nocaps)(int module_unload)
 	return MOD_SUCCESS;
 }
 
-DLLFUNC char *nocaps_checkmsg(aClient *cptr, aClient *sptr, aChannel *chptr, char *text, int notice)
+char *nocaps_checkmsg(aClient *sptr, aChannel *chptr, char *text, int notice)
 {
 	int contor;
 	unsigned short int rezultat=0;
