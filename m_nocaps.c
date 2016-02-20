@@ -10,6 +10,8 @@
  * 
  * Changes:
  *
+ * 1.6 (DBoyz) [20th February 2016]
+ * ---- Set struct pointer to NULL after doing a free()
  * 1.5 (DBoyz) [26th December 2015]
  * ---- Update to UnrealIRCd-4.0 codebase.
  * 1.4.1 (DBoyz) [25th December 2015]
@@ -41,6 +43,7 @@
 
 #define NOCAPS_ACTION 1
 
+#define DelHook(x) if (x) HookDel(x); x = NULL
 Cmode_t NOCAPS_BLOCK = 0L;
 Cmode *ModeBlock = NULL;
 static Hook *CheckMsg;
@@ -49,7 +52,7 @@ char *nocaps_checkmsg(aClient *, aChannel *, char *, int);
 ModuleHeader MOD_HEADER(m_nocaps)
 = {
 	"m_nocaps",
-	"v1.5",
+	"v1.6",
 	"chmode +x - Blocks all caps messages sent to channels (Grunt, DBoyz)",
 	"3.2-b8-1",
 	NULL
@@ -81,7 +84,7 @@ MOD_LOAD(m_nocaps)
 
 MOD_UNLOAD(m_nocaps)
 {
-	HookDel(CheckMsg);
+	DelHook(CheckMsg);
 	CmodeDel(ModeBlock);
 	ircd_log(LOG_ERROR, "debug: mod_unload called from m_nocaps");
 	sendto_realops("unloading m_nocaps");
