@@ -28,6 +28,10 @@ MOD_TEST(noamsg)
 
 MOD_INIT(noamsg)
 {
+	ircd_log(LOG_ERROR, "debug: mod_init called from noamsg");
+
+	sendto_realops("loading noamsg");
+
 	MyModInfo = modinfo;
 
 	return MOD_SUCCESS;
@@ -52,6 +56,10 @@ MOD_LOAD(noamsg)
 
 MOD_UNLOAD(noamsg)
 {
+	ircd_log(LOG_ERROR, "debug: mod_unload called from noamsg");
+
+	sendto_realops("unloading noamsg");
+
 	DelOverride("PRIVMSG", OvrP);
 
 	ircfree(OvrP);
