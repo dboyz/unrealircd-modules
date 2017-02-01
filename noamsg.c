@@ -137,8 +137,5 @@ static int override_noamsg(Cmdoverride *ovr, aClient *cptr, aClient *sptr, int p
 		return -1;
 	}
 
-	ircfree(nick);
-	ircfree(p);
-
 	return CallCmdoverride(OvrP, cptr, sptr, parc, parv);
 }
