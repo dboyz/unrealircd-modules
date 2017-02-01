@@ -15,7 +15,7 @@ static int override_noamsg(Cmdoverride *, aClient *, aClient *, int, char *[]);
 ModuleHeader MOD_HEADER(noamsg)
 = {
 	"noamsg",
-	"v0.1",
+	"v0.2",
 	"Disables AMSG and AME command (DBoyz)",
 	"3.2-b8-1",
 	NULL
